@@ -18,6 +18,7 @@ from voluptuous import Invalid, MultipleInvalid
 
 # module
 from avwx_api_core import validate
+from avwx_api_core.structs import Params, DEFAULT_PARAMS
 from avwx_api_core.token import Token, TokenManager
 
 
@@ -38,43 +39,50 @@ class BaseView(Resource):
         if self.key_remv is None:
             self.key_remv = []
 
-    def format_output(self, output: dict) -> dict:
+    # pylint: disable=redefined-builtin
+    def format_output(
+        self, output: dict, remove: list[str], filter: list[str], ignore: list[str]
+    ) -> dict:
         """Formats a dict by recursively replacing or removing keys"""
         if isinstance(output, list):
-            return [self.format_output(item) for item in output]
+            return [self.format_output(item, remove, filter, ignore) for item in output]
         if not isinstance(output, dict):
             return output
         resp = {}
         for key, val in output.items():
-            if key in self.key_remv:
+            if key in ignore:
+                resp[key] = val
+                continue
+            if key in remove:
                 continue
             if key in self.key_repl:
                 key = self.key_repl[key]
             if isinstance(val, (dict, list)):
-                val = self.format_output(val)
-            resp[key] = val
+                val = self.format_output(val, remove, filter, ignore)
+            if not filter or key in filter:
+                resp[key] = val
         return resp
 
     def make_response(
         self,
         output: dict,
-        # pylint: disable=redefined-builtin
-        format: str = "json",
+        params: Params = DEFAULT_PARAMS,
         code: int = 200,
         meta: str = "meta",
         root: str = "AVWX",
     ) -> Response:
-        """Returns the output string based on format param"""
-        output = self.format_output(output)
+        """Returns the output string based on format parameters"""
+        remove = params.remove + list(self.key_remv)
+        output = self.format_output(output, remove, params.filter, [meta])
         if "error" in output and meta not in output:
             output["timestamp"] = datetime.now(tz=timezone.utc)
         if self.note and isinstance(output, dict):
             if meta not in output:
                 output[meta] = {}
             output[meta]["note"] = self.note
-        if format == "xml":
+        if params.format == "xml":
             resp = Response(fxml(output, custom_root=root.upper()), mimetype="text/xml")
-        elif format == "yaml":
+        elif params.format == "yaml":
             resp = Response(
                 yaml.dump(output, default_flow_style=False), mimetype="text/x-yaml"
             )
