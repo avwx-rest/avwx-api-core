@@ -113,7 +113,7 @@ class CacheManager:
 
     async def update_many(self, table: str, keys: list[str], data: list[dict]) -> None:
         """Update many items in the cache"""
-        if self._app.mdb is None:
+        if self._app.mdb is None or not data:
             return
         updates = [
             UpdateOne({"_id": k}, {"$set": _process_data(d)}, upsert=True)

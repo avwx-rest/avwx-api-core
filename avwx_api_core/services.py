@@ -5,6 +5,7 @@ Custom report services
 # pylint: disable=too-few-public-methods
 
 # library
+import rollbar
 from xmltodict import parse as parsexml
 
 # module
@@ -40,7 +41,11 @@ class FlightRouter(CallsHTTP):
                 "Could not find report path in response"
             ) from key_error
         target = "station_id" if report_type == "station" else "raw_text"
-        return list({r[target] for r in reports})
+        try:
+            return list({r[target] for r in reports})
+        except Exception as exc:
+            rollbar.report_exc_info(exc, extra_data={"text": text, "reports": reports})
+            return []
 
     async def fetch(
         self, report_type: str, distance: float, route: list[Coord]

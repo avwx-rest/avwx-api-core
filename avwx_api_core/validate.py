@@ -9,6 +9,7 @@ import re
 from typing import Callable
 
 # library
+import rollbar
 from voluptuous import All, Coerce, In, Invalid, Length, Range, Required
 
 # module
@@ -92,6 +93,7 @@ Token = All(
 
 def FlightRoute(values: str) -> list[Coord]:
     """Validates a semicolon-separated string of coordinates or navigation markers"""
+    path_str = values
     values = values.upper().split(";")
     if not values:
         raise Invalid("Could not find any route components in the request")
@@ -99,7 +101,11 @@ def FlightRoute(values: str) -> list[Coord]:
         if "," in val:
             loc = val.split(",")
             values[i] = Coord(lat=Latitude(loc[0]), lon=Longitude(loc[1]), repr=val)
-    return to_coordinates(values)
+    try:
+        return to_coordinates(values)
+    except BadStation as exc:
+        rollbar.report_exc_info(exc, extra_data={"path": path_str})
+        raise Invalid(str(exc))
 
 
 required = {
