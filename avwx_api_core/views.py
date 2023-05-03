@@ -7,7 +7,7 @@ Core API view handlers
 # stdlib
 from datetime import datetime, timezone
 from functools import wraps
-from typing import Callable, Optional
+from typing import Callable
 
 # library
 import yaml
@@ -140,7 +140,7 @@ class AuthView(BaseView):
     plan_types: tuple[str] = None
 
     @staticmethod
-    def _auth_token() -> Optional[str]:
+    def _auth_token() -> str | None:
         """Extracts the supplied API token from the request"""
         return (
             request.headers.get("AUTHORIZATION")
@@ -148,7 +148,13 @@ class AuthView(BaseView):
             or request.args.get("token")
         )
 
-    async def validate_token(self, token_manager: TokenManager) -> tuple[int, Token]:
+    def _can_access(self, token: Token) -> bool:
+        return not self.plan_types or token.is_developer or token.valid_type(self.plan_types)
+
+    def _unauthorized_token(self, token: Token | None) -> bool:
+        return token is None or not token.active or not self._can_access(token)
+
+    async def validate_token(self, token_manager: TokenManager) -> tuple[int, Token | None]:
         """Validates thats an authorization token exists and is active
 
         Returns the response code and Token object
@@ -160,18 +166,15 @@ class AuthView(BaseView):
         except (Invalid, MultipleInvalid):
             return 401, None
         auth_token = await token_manager.get(auth_token)
-        if auth_token is None or not auth_token.active:
+        if self._unauthorized_token(auth_token):
             return 403, auth_token
-        if self.plan_types and not auth_token.is_developer:
-            if not auth_token.valid_type(self.plan_types):
-                return 403, auth_token
         # Increment returns False if rate limit exceeded
         if auth_token and not await token_manager.increment(auth_token):
             return 429, auth_token
         return 200, auth_token
 
     # pylint: disable=unused-argument,no-self-use
-    def validate_token_parameters(self, token: Token, *args) -> Optional[dict]:
+    def validate_token_parameters(self, token: Token, *args) -> dict | None:
         """Returns an error payload if parameter validation doesn't match plan level"""
         return None
 

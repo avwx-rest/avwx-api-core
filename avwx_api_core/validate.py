@@ -50,9 +50,7 @@ Longitude = All(Coerce(float), Range(-180, 180))
 
 def Split(values: str) -> list[str]:
     """Splits a comma-separated string"""
-    if not values:
-        return []
-    return values.split(",")
+    return values.split(",") if values else []
 
 
 def SplitIn(values: tuple[str]) -> Callable:
@@ -105,7 +103,7 @@ def FlightRoute(values: str) -> list[Coord]:
         return to_coordinates(values)
     except BadStation as exc:
         rollbar.report_exc_info(exc, extra_data={"path": path_str})
-        raise Invalid(str(exc))
+        raise Invalid(str(exc)) from exc
 
 
 required = {

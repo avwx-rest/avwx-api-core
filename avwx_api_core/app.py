@@ -19,7 +19,7 @@ class CustomJSONEncoder(JSONEncoder):
         try:
             if isinstance(object_, datetime):
                 new_object_ = object_.replace(tzinfo=None)
-                return new_object_.isoformat() + "Z"
+                return f"{new_object_.isoformat()}Z"
             if isinstance(object_, date):
                 return object_.isoformat()
             iterable = iter(object_)

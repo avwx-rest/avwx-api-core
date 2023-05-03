@@ -56,7 +56,7 @@ class FlightRouter(CallsHTTP):
             raise InvalidRequest(f"{report_type} is not a valid router report type")
         flight_path = ";".join(f"{coord.lon},{coord.lat}" for coord in route)
         params = {
-            "dataSource": target_type + "s",
+            "dataSource": f"{target_type}s",
             "requestType": "retrieve",
             "format": "xml",
             "flightPath": f"{distance};{flight_path}",

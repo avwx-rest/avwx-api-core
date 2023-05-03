@@ -25,8 +25,7 @@ class Queue:
     @asynccontextmanager
     async def get(self) -> Any:
         """Get a value to handle. Used in a 'with' statement"""
-        value = await self._queue.get()
-        yield value
+        yield await self._queue.get()
         self._queue.task_done()
 
     async def clean(self, wait: bool = True):

@@ -5,7 +5,7 @@ MongoDB document cache management
 # stdlib
 from copy import copy
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from typing import Any
 
 # library
 from pymongo import UpdateOne
@@ -20,7 +20,7 @@ EXPIRES = {"token": 15, "airsigmet": 15}
 DEFAULT_EXPIRES = 2
 
 
-def _replace_keys(data: Optional[dict], key: str, by_key: str) -> Optional[dict]:
+def _replace_keys(data: dict | None, key: str, by_key: str) -> dict | None:
     """Replaces recursively the keys equal to 'key' by 'by_key'
 
     Some keys in the report data are '$' and this is not accepted by MongoDB
@@ -81,11 +81,9 @@ class CacheManager:
 
         data = await mongo_handler(search())
         data = [_replace_keys(i, "_$", "$") for i in data]
-        if force:
-            return data
-        return [i for i in data if self._include_item(i, table)]
+        return data if force else [i for i in data if self._include_item(i, table)]
 
-    async def get(self, table: str, key: str, force: bool = False) -> Optional[dict]:
+    async def get(self, table: str, key: str, force: bool = False) -> dict | None:
         """Returns the current cached data for a report type and station
 
         By default, will only return if the cache timestamp has not been exceeded

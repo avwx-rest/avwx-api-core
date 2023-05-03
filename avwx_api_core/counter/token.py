@@ -7,7 +7,6 @@ import time
 import asyncio as aio
 from contextlib import suppress
 from datetime import datetime, timezone
-from typing import Optional
 
 # library
 from bson.objectid import ObjectId
@@ -36,7 +35,7 @@ class TokenCountCache(DelayedCounter):
             hour=0, minute=0, second=0, microsecond=0
         )
 
-    async def _fetch_token_data(self, token: str) -> Optional[dict]:
+    async def _fetch_token_data(self, token: str) -> dict | None:
         """Fetch token data from database"""
         if self._app.mdb is None:
             return None
@@ -83,9 +82,7 @@ class TokenCountCache(DelayedCounter):
     async def _set_usage(self, user_id: ObjectId, tokens: list[dict]):
         """Set the user's existing token count"""
         counts = await self._fetch_token_usage(user_id)
-        total = 0
-        for token in tokens:
-            total += counts.get(token["_id"], 0)
+        total = sum(counts.get(token["_id"], 0) for token in tokens)
         self._user[user_id] = total
 
     def _set_tokens(self, data: list[dict]):
@@ -148,13 +145,11 @@ class TokenCountCache(DelayedCounter):
         for item in to_update.values():
             if not item:
                 continue
-            count = item["count"]
-            if not count:
-                continue
-            self._queue.add((item["data"]["user"], item["id"], count, item["overage"]))
+            if count := item["count"]:
+                self._queue.add((item["data"]["user"], item["id"], count, item["overage"]))
         self.update_at = time.time() + self.interval
 
-    async def get(self, token: str) -> Optional[dict]:
+    async def get(self, token: str) -> dict | None:
         """Fetch data for a token. Must be called before increment"""
         await self._pre_add()
         try:

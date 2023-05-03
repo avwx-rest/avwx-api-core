@@ -14,8 +14,7 @@ async def mongo_handler(operation: Coroutine) -> object:
     """Error handling around the Mongo client connection"""
     for _ in range(5):
         try:
-            resp = await operation
-            return resp
+            return await operation
         except OperationFailure:
             return
         except AutoReconnect:
