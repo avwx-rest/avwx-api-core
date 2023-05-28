@@ -26,7 +26,7 @@ setup(
         "quart==0.17.0",
         "quart-openapi>=1.7.2",
         "voluptuous~=0.13",
-        "werkzeug==2.2.3",
+        "werkzeug==2.1.2",
     ],
     packages=find_namespace_packages(include=["avwx_api_core*"]),
     package_data={"avwx_api_core.data": ["navaids.json"]},
