@@ -1,10 +1,10 @@
 git+https://github.com/avwx-rest/dicttoxml
+git+https://github.com/flyinactor91/quart-openapi@1e894cba8dbb14a41d4ed5dc5d9c6cfb5990ae57
+
 
 avwx-engine>=1.8
 dnspython~=2.4
 motor>=3.3
 pyyaml~=6.0
-quart==0.17.0
-quart-openapi>=1.7.2
+quart~=0.19
 voluptuous~=0.13
-werkzeug==2.1.2

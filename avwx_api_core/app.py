@@ -3,31 +3,29 @@ API App Management
 """
 
 # stdlib
+from dataclasses import asdict, is_dataclass
 from datetime import date, datetime
 
 # library
 from motor.motor_asyncio import AsyncIOMotorClient
-from quart.json import JSONEncoder
+from quart.json.provider import DefaultJSONProvider
 from quart_openapi import Pint
 
 
-class CustomJSONEncoder(JSONEncoder):
-    """Customize the JSON date format"""
+class CustomJSONProvider(DefaultJSONProvider):
 
-    # pylint: disable=arguments-differ
-    def default(self, object_):
-        try:
-            if isinstance(object_, datetime):
-                new_object_ = object_.replace(tzinfo=None)
-                return f"{new_object_.isoformat()}Z"
-            if isinstance(object_, date):
-                return object_.isoformat()
-            iterable = iter(object_)
-        except TypeError:
-            pass
-        else:
-            return list(iterable)
-        return JSONEncoder.default(self, object_)
+    @staticmethod
+    def default(object_):
+        if is_dataclass(object_):
+            return asdict(object_)
+        if hasattr(object_, "__html__"):
+            return str(object_.__html__())
+        if isinstance(object_, datetime):
+            new_object_ = object_.replace(tzinfo=None)
+            return f"{new_object_.isoformat()}Z"
+        if isinstance(object_, date):
+            return object_.isoformat()
+        raise TypeError(f"Object of type {type(object_).__name__} is not JSON serializable")
 
 
 CORS_HEADERS = ["Authorization", "Content-Type"]
@@ -58,6 +56,6 @@ def create_app(name: str, mongo_uri: str = None) -> Pint:
     async def _startup():
         app.mdb = AsyncIOMotorClient(mongo_uri) if mongo_uri else None
 
-    app.json_encoder = CustomJSONEncoder
+    app.json_provider_class = CustomJSONProvider
     app.after_request(add_cors)
     return app
