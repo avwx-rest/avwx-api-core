@@ -20,8 +20,8 @@ setup(
     install_requires=[
         "dicttoxml @ git+https://github.com/avwx-rest/dicttoxml",
         "avwx-engine>=1.8",
-        "dnspython~=2.3",
-        "motor>=3.1",
+        "dnspython~=2.4",
+        "motor>=3.3",
         "pyyaml~=6.0",
         "quart==0.17.0",
         "quart-openapi>=1.7.2",
