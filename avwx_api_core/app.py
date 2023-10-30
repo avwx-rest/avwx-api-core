@@ -50,12 +50,12 @@ def add_cors(response):
 
 def create_app(name: str, mongo_uri: str = None) -> Pint:
     """Create the core API app. Supply URIs as necessary"""
+    Pint.json_provider_class = CustomJSONProvider
     app = Pint(name)
 
     @app.before_serving
     async def _startup():
         app.mdb = AsyncIOMotorClient(mongo_uri) if mongo_uri else None
 
-    app.json_provider_class = CustomJSONProvider
     app.after_request(add_cors)
     return app
