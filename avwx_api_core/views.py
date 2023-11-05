@@ -39,6 +39,10 @@ class BaseView(Resource):
         if self.key_remv is None:
             self.key_remv = []
 
+    def options(self):
+        """Return empty response for OPTIONS headers"""
+        return Response()
+
     # pylint: disable=redefined-builtin
     def format_output(
         self, output: dict, remove: list[str], filter: list[str], ignore: list[str]

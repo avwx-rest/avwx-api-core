@@ -8,6 +8,7 @@ from datetime import date, datetime
 
 # library
 from motor.motor_asyncio import AsyncIOMotorClient
+from quart import Response
 from quart.json.provider import DefaultJSONProvider
 from quart_openapi import Pint
 
@@ -31,7 +32,7 @@ class CustomJSONProvider(DefaultJSONProvider):
 CORS_HEADERS = ["Authorization", "Content-Type"]
 
 
-def add_cors(response):
+def add_cors(response: Response) -> Response:
     """Add missing CORS headers
 
     Fixes CORS bug where headers are not included in OPTIONS
