@@ -7,7 +7,7 @@ from dataclasses import asdict, is_dataclass
 from datetime import date, datetime
 
 # library
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import AsyncMongoClient
 from quart import Response
 from quart.json.provider import DefaultJSONProvider
 from quart_openapi import Pint
@@ -56,7 +56,7 @@ def create_app(name: str, mongo_uri: str = None) -> Pint:
 
     @app.before_serving
     async def _startup():
-        app.mdb = AsyncIOMotorClient(mongo_uri) if mongo_uri else None
+        app.mdb = AsyncMongoClient(mongo_uri) if mongo_uri else None
 
     app.after_request(add_cors)
     return app
